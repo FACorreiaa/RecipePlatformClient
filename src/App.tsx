@@ -1,57 +1,50 @@
-import React from 'react';
-import logo from './logo.svg';
-import { Counter } from './features/counter/Counter';
-import './App.css';
+import React from "react";
+import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+import setAuthToken from "./config/SetAuthToken";
+import jwt_decode from "jwt-decode";
+import { logoutUser, setCurrentUser } from "./app/services/auth.service";
+import { Provider, useDispatch } from "react-redux";
+import routesConfig from "./config/routesConfig";
+import PrivateRoute from "./config/PrivateRoute";
+import { store } from "./app/store";
 
 function App() {
+  const dispatch = useDispatch();
+  if (localStorage.getItem("JWT_TOKEN")) {
+    // Set auth token header auth
+    const access_token = localStorage.getItem("JWT_TOKEN");
+    setAuthToken(access_token);
+    // Decode token and get user info and exp
+    const decoded: any = jwt_decode(access_token);
+    // Set user and isAuthenticated
+    dispatch(setCurrentUser(decoded));
+    // Check for expired token
+    const currentTime = Date.now() / 1000; // to get in milliseconds
+    if (decoded.exp < currentTime) {
+      // Logout user
+      dispatch(logoutUser());
+      // Redirect to login
+      window.location.href = "./searchVehicles";
+    }
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <Counter />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <span>
-          <span>Learn </span>
-          <a
-            className="App-link"
-            href="https://reactjs.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            React
-          </a>
-          <span>, </span>
-          <a
-            className="App-link"
-            href="https://redux.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Redux
-          </a>
-          <span>, </span>
-          <a
-            className="App-link"
-            href="https://redux-toolkit.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Redux Toolkit
-          </a>
-          ,<span> and </span>
-          <a
-            className="App-link"
-            href="https://react-redux.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            React Redux
-          </a>
-        </span>
-      </header>
-    </div>
+    <Router>
+      <Switch>
+        {routesConfig.routes.map(({ component, roles, url }) =>
+          roles.length ? (
+            <PrivateRoute
+              exact
+              path={url}
+              component={component}
+              roles={roles}
+            />
+          ) : (
+            <Route exact path={url} component={component} />
+          )
+        )}
+      </Switch>
+    </Router>
   );
 }
 
