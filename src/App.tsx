@@ -1,13 +1,13 @@
 import React from "react";
-import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+import { BrowserRouter as Router, Route, RouteComponentProps, Switch } from "react-router-dom";
 import setAuthToken from "./config/SetAuthToken";
 import jwt_decode from "jwt-decode";
-import { logoutUser, setCurrentUser } from "./app/services/auth.service";
-import { Provider, useDispatch } from "react-redux";
+import { logoutUser } from "./app/services/auth.service";
+import { useDispatch } from "react-redux";
 import routesConfig from "./config/routesConfig";
 import PrivateRoute from "./config/PrivateRoute";
-import { store } from "./app/store";
-
+import { setCurrentUser } from "./app/actions/auth.actions";
+import { history} from './config/History'
 function App() {
   const dispatch = useDispatch();
   if (localStorage.getItem("JWT_TOKEN")) {
@@ -24,12 +24,12 @@ function App() {
       // Logout user
       dispatch(logoutUser());
       // Redirect to login
-      window.location.href = "./searchVehicles";
+      window.location.href = "/";
     }
   }
 
   return (
-    <Router>
+    <Router history={history}>
       <Switch>
         {routesConfig.routes.map(({ component, roles, url }) =>
           roles.length ? (
@@ -48,4 +48,11 @@ function App() {
   );
 }
 
+/*
+const RouterPage = (
+  props: { children: JSX.Element } & RouteComponentProps
+) => props.children*/
+
 export default App;
+
+

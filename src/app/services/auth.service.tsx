@@ -1,81 +1,57 @@
 import axios from "axios";
 import setAuthToken from "../../config/SetAuthToken";
 import jwt_decode from "jwt-decode";
-import { SET_CURRENT_USER, SET_NEW_USER } from "../types/auth.type";
 import { Dispatch } from "redux";
 import { history } from "../../config/History";
-
-interface UserInterface {
-  name: string;
-  username: string;
-  email: string;
-  password: string;
-}
+import { setCurrentUser, setNewuser } from "../actions/auth.actions";
+import UserInterface from "../model/user.interface";
+import { LOGOUT } from "../types/auth.type";
 //register
 export const registerUser = (
-  name: string,
-  username: string,
-  email: string,
-  password: string
+  data: UserInterface
   //profileImage: string
-) => async (dispatch: Dispatch) => {
-  try {
-    const result = await axios.post("http://localhost:3000/api/users/", {
-      name,
-      username,
-      email,
-      password,
+) => (dispatch: Dispatch) => {
+  axios
+    .post("http://localhost:3000/api/users/", data)
+    .then(() => {
+      history.push("/login");
+      dispatch(setNewuser(data));
+    })
+    .catch((error) => {
+      throw error;
     });
-    dispatch(setNewuser({ name, username, email, password }));
-    history.push("/login");
-  } catch (error) {
-    throw new error();
-  }
 };
 
 //login
-export const loginUser = (email: string, password: string, from: any) => async (
+export const loginUser = (data: UserInterface, from: any) => (
   dispatch: Dispatch
 ) => {
-  try {
-    const result = await axios.post("http://localhost:3000/api/users/login", {
-      email,
-      password,
+  axios
+    .post("http://localhost:3000/api/users/login", data)
+    .then((res) => {
+      //Save to localstorage
+      //Set token to localStorage
+
+      const { access_token } = res.data;
+      localStorage.setItem("JWT_TOKEN", access_token);
+
+      //set token to auth header
+      setAuthToken(access_token);
+
+      //decode token to get user data
+      const decoded = jwt_decode(access_token);
+
+      //set current user
+      dispatch(setCurrentUser(decoded));
+      history.push(from);
+    })
+    .catch((error) => {
+      throw error;
     });
-    const { access_token } = result.data;
-    localStorage.setItem("JWT_TOKEN", access_token);
-    //set token to auth header
-    setAuthToken(access_token);
-
-    //decode token to get user data
-    const decoded = jwt_decode(access_token);
-
-    //set current
-    dispatch(setCurrentUser(decoded));
-    history.push(from);
-    console.log("from", from);
-  } catch (error) {
-    throw new error();
-  }
 };
 
-//Set loggedin user
-export const setCurrentUser = (decoded: any) => {
-  return {
-    type: SET_CURRENT_USER,
-    payload: decoded,
-  };
-};
-
-//Set new user
-export const setNewuser = (user: UserInterface) => {
-  return {
-    type: SET_NEW_USER,
-    payload: user,
-  };
-};
 //Log user out
-export const logoutUser = () => (dispatch: Dispatch) => {
+export const logoutUser = () => () => {
   //remove token from local storage
   localStorage.removeItem("access_token");
 
@@ -83,5 +59,5 @@ export const logoutUser = () => (dispatch: Dispatch) => {
   setAuthToken("");
 
   //set current user to empty object, set isAuth to false
-  dispatch(setCurrentUser(""));
+  return { type: LOGOUT };
 };

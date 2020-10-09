@@ -13,9 +13,8 @@ import Typography from "@material-ui/core/Typography";
 import { makeStyles } from "@material-ui/core/styles";
 import landing from "../../assets/images/landing.webp";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation, Link, Redirect } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { loginUser, logoutUser } from "../../app/services/auth.service";
-import history from "../../config/History";
 function Copyright() {
   return (
     <Typography variant="body2" color="textSecondary" align="center">
@@ -88,8 +87,10 @@ function Login() {
 
     setSubmitted(true);
     if (email && password) {
+      const data = { email, password };
+      console.log(data);
       const { from } = location.state || { from: { pathname: "/user" } };
-      dispatch(loginUser(email, password, from));
+      dispatch(loginUser(data, from));
     }
   }
   return (

@@ -15,7 +15,6 @@ import { makeStyles } from "@material-ui/core/styles";
 import landing from "../../assets/images/landing.webp";
 import { useDispatch, useSelector } from "react-redux";
 import { registerUser, logoutUser } from "../../app/services/auth.service";
-
 function Copyright() {
   return (
     <Typography variant="body2" color="textSecondary" align="center">
@@ -71,7 +70,7 @@ function Register() {
     password: "",
   });
   const [submitted, setSubmitted] = useState(false);
-  const register = useSelector((state) => state.auth.registerUser);
+  const register = useSelector((state) => state.auth.auth);
   const dispatch = useDispatch();
 
   //reset login status
@@ -87,7 +86,8 @@ function Register() {
   function handleSubmit(e) {
     e.preventDefault();
     setSubmitted(true);
-    if (user.username && user.name && user.email && user.password) {
+
+    if (user) {
       dispatch(registerUser(user));
     }
   }
